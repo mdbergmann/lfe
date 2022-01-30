@@ -193,9 +193,11 @@
         loaded-functions))))
 
 (defun lfeac--load-module-functions (module)
-  (lfeac--execute-on-backend
-   (format "lfe -e \"%s\" "
-           (format "(pp (%s:module_info))" module))))
+  (let ((result (lfeac--execute-on-backend
+                 (format "lfe -e \"(pp (%s:module_info))\"" module))))
+    (if (string-search "exception" result)
+        "()"
+      result)))
 
 (defun lfeac--get-or-load-modules ()
   "Get loaded module names."
