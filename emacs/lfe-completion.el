@@ -76,10 +76,9 @@
   "New auto completion for ARG in BUFFER at MARKER."
   (let ((se (lfeac--sexp-at-point buffer marker))
         (ss (split-string arg ":")))
-    (message "se: %s, ss: %s, arg: %s" se ss arg)
-      (if (equal 1 (length ss))
-          (lfeac-ac-symbols-and-modules arg)
-        (lfeac-ac-module-functions (car ss) (cadr ss)))))
+    (if (equal 1 (length ss))
+        (lfeac-ac-symbols-and-modules arg)
+      (lfeac-ac-module-functions (car ss) (cadr ss)))))
 
 (defun lfeac-ac-symbols-and-modules (arg)
   (cl-remove-if-not
