@@ -125,6 +125,16 @@ Return nil if `STR` matches `inferior-lfe-filter-regexp', otherwise t."
                           ("no" ?n "use regular lfe")))
            "yes"))
 
+(defun inferior-lfe--is-rebar-project ()
+  "Return the project root directory."
+  (locate-dominating-file default-directory "rebar.config"))
+
+(defun inferior-lfe--start-rebar-lfe ()
+  (string= (read-answer "Rebar3 project detected. Start lfe repl using rebar3? "
+                        '(("yes" ?y "use rebar3")
+                          ("no" ?n "use regular lfe")))
+           "yes"))
+
 ;;;###autoload
 (defun inferior-lfe ()
   "Run an inferior LFE process, input and output via a buffer `*inferior-lfe*'.
@@ -134,12 +144,15 @@ and can choose to run lfe using rebar3."
   (interactive)
   (let ((prog inferior-lfe-program)
         (opts (append inferior-lfe-program-options
-                      '("-env" "TERM" "vt100"))))
-    (if (and inferior-lfe-check-if-rebar-project
-             (inferior-lfe--is-rebar-project)
-             (inferior-lfe--start-rebar-lfe))
-        (setq prog "sh"
-              opts (list "-i" "-c" (concat "TERM=\"vt100\"; rebar3 lfe repl"))))
+                      '("-env" "TERM" "vt100")))
+        (rebar-project-root (inferior-lfe--is-rebar-project)))
+    (when (and inferior-lfe-check-if-rebar-project
+               rebar-project-root
+               (inferior-lfe--start-rebar-lfe))
+      (setq prog "sh"
+            opts (list "-i" "-c" (concat "TERM=\"vt100\";"
+                                         (format "cd %s" rebar-project-root)
+                                         "; rebar3 lfe repl"))))
     (unless (comint-check-proc "*inferior-lfe*")
       (set-buffer (apply (function make-comint)
                          "inferior-lfe" prog nil opts))
